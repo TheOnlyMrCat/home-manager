@@ -134,8 +134,15 @@ in {
 
       oauthParams = { auth, params }:
         if useOauth auth && params != null && params != { } then
-          "?" + builtins.concatStringsSep "&" lib.attrsets.mapAttrsToList
-          (k: v: k + "=" + lib.strings.escapeURL v) params
+          "?" + builtins.concatStringsSep "&" ([
+            ("token_endpoint=" + params.token_endpoint)
+            ("client_id=" + params.client_id)
+            ("client_secret=" + params.client_secret)
+            ("scope=" + params.scope)
+          ])
+          # (lib.attrsets.mapAttrsToList
+          #   (k: v: k + "=" + v) params)
+            # (k: v: k + "=" + lib.strings.escapeURL v) params)
         else
           "";
 
@@ -164,7 +171,7 @@ in {
 
           in {
             source =
-              "${protocol}://${userName}@${imap.host}${port'}${oauthParams'}";
+              "${protocol}://${lib.strings.escapeURL userName}@${imap.host}${port'}${oauthParams'}";
           } // optPwCmd "source" passwordCommand;
 
         smtp = { userName, smtp, passwordCommand, ... }@cfg:
@@ -189,7 +196,7 @@ in {
 
           in {
             outgoing =
-              "${protocol}://${userName}@${smtp.host}${port'}${oauthParams'}";
+              "${protocol}://${lib.strings.escapeURL userName}@${smtp.host}${port'}${oauthParams'}";
           } // optPwCmd "outgoing" passwordCommand;
 
         msmtp = cfg: {
